@@ -1,0 +1,87 @@
+<div style="background:url('timg.jpg');background-size:cover;width:600px;" ><canvas id="snowWrapCanvas" width="600" height='400'></canvas>
+<p style="color:#fff; text-align:center; cursor:pointer; background:rgba(255,255,255,0.3);margin-top:0;" ><span onClick="mySnows.snowStopping = true;">雪停了</span>
+&nbsp;&nbsp;&nbsp;<span onClick="mySnows.snowStopping = false;">下雪了</span></p>
+</div>
+<script>
+function Snowing(){
+ this.snows=[];
+ this.env ={
+	width:10,
+	height:10,
+	context:{}
+ };
+ this.gravityAcceleration=0.2;
+ this.snowStopping = false;
+};
+Snowing.prototype.init = function(){
+		var _env = document.getElementById('snowWrapCanvas');
+		this.env.width = _env.width;
+		this.env.height = _env.height;
+		this.env.context = _env.getContext('2d');
+		//清空snows数组
+		
+		this.snows=[];
+		this.drawSnows();
+	};
+Snowing.prototype.snowMaker = function(){
+		var _snow = {
+			top:-1*Math.floor(Math.random()*50),
+			left:Math.floor(Math.random()*this.env.width),
+			verticalSpeed:Math.floor(Math.random()*6)-3,
+			horizontalSpeed:Math.floor(Math.random()*10),
+			radius:Math.floor(Math.random()*5)+2,
+			alpha:(Math.floor(Math.random()*5)+5)/10
+		};
+		this.snows.push(_snow);
+	};
+Snowing.prototype.updateSnow = function(){
+		//清除已经落入canvas外的雪花或更新现有雪花的属性
+		var _snows = [];
+		for(x in this.snows){
+			if(this.snows[x].top < this.env.height && this.snows[x].left <this.env.width){
+				this.snows[x].top =this.snows[x].top + (this.snows[x].verticalSpeed);
+				this.snows[x].left =this.snows[x].left + this.snows[x].horizontalSpeed;
+				this.snows[x].verticalSpeed = this.snows[x].verticalSpeed + this.gravityAcceleration*0.05;
+				this.snows[x].radius = this.snows[x].radius+(Math.floor(Math.random()*2)+1)/100;
+				_snows.push(this.snows[x]);
+			}
+			
+		}
+		this.snows = [];
+		this.snows = _snows;
+		var _len = this.snows.length;
+		var radiumLen = 80+Math.floor(Math.random()*10);
+		//如果雪花数量不够的话  生成新的雪花
+		if(_len<radiumLen && this.snowStopping === false){
+			for(var i=0;i<radiumLen-_len;i++){
+				this.snowMaker();
+			}
+		}
+	};
+	
+Snowing.prototype.drawSnows=function(){
+		var ctx = this.env.context;
+		//更新snow数组
+		this.updateSnow();
+		//清空canvas
+		ctx.clearRect(0,0,this.env.width,this.env.height);
+		//把snow array花在canvas上
+		for(var i=0;i<this.snows.length;i++){
+			var _snow = this.snows[i]; 
+			var radgrad = ctx.createRadialGradient(_snow.left,_snow.top,0,_snow.left,_snow.top,_snow.radius);
+			radgrad.addColorStop(0, 'rgba(255,255,255,'+_snow.alpha+')');
+			radgrad.addColorStop(1, 'rgba(255,255,255,0)');
+			ctx.fillStyle = radgrad;
+			ctx.fillRect(0,0,this.env.width,this.env.height);
+		}
+		window.requestAnimationFrame(this.drawSnows.bind(this));
+		//setTimeout(this.drawSnows.bind(this),30);
+	};
+Snowing.prototype.startSnow = function(){};
+Snowing.prototype.stopSnow = function(){};
+
+var mySnows = new Snowing();
+mySnows.init();
+
+
+</script>
